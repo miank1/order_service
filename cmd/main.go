@@ -1,13 +1,13 @@
 package main
 
 import (
-	"ecommerce-backend/pkg/db"
-	"ecommerce-backend/pkg/logger"
-	"ecommerce-backend/services/orderservice/internal/handler"
-	"ecommerce-backend/services/orderservice/internal/models"
-	"ecommerce-backend/services/orderservice/internal/repository"
-	"ecommerce-backend/services/orderservice/internal/service"
 	"log"
+	"order-service/internal/handler"
+	"order-service/internal/models"
+	"order-service/internal/repository"
+	"order-service/internal/service"
+	"order-service/pkg/db"
+	"order-service/pkg/logger"
 
 	"os"
 
@@ -22,7 +22,7 @@ func main() {
 	defer logger.Sync()
 
 	// Load environment variables from .env file
-	if err := godotenv.Load("../.env"); err != nil {
+	if err := godotenv.Load(".env"); err != nil {
 		log.Println("⚠️  No .env file found, using system environment variables")
 	}
 	dsn := os.Getenv("DATABASE_DSN")
@@ -42,7 +42,7 @@ func main() {
 
 	r := gin.Default()
 
-	api := r.Group("/api/v1/orders")
+	api := r.Group("orders")
 	{
 		api.POST("", h.Create)
 		api.GET("/:id", h.GetOrder)

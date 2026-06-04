@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"ecommerce-backend/services/orderservice/internal/service"
 	"log"
 	"net/http"
+	"order-service/internal/service"
 
 	"github.com/gin-gonic/gin"
 )

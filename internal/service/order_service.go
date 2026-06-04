@@ -2,8 +2,9 @@ package service
 
 import (
 	"bytes"
-	"ecommerce-backend/services/orderservice/internal/models"
-	"ecommerce-backend/services/orderservice/internal/repository"
+	"order-service/internal/models"
+	"order-service/internal/repository"
+
 	"encoding/json"
 	"fmt"
 	"log"
