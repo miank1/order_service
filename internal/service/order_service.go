@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"io"
 	"order-service/internal/models"
 	"order-service/internal/repository"
 
@@ -13,17 +14,31 @@ import (
 )
 
 type OrderService struct {
-	Repo *repository.OrderRepository
+	repo              *repository.OrderRepository
+	paymentServiceURL string
+	httpClient        *http.Client
 }
 
-func NewOrderService(repo *repository.OrderRepository) *OrderService {
-	return &OrderService{Repo: repo}
+type PaymentRequest struct {
+	OrderID string  `json:"order_id"`
+	UserID  string  `json:"user_id"`
+	Amount  float64 `json:"amount"`
+}
+
+func NewOrderService(repo *repository.OrderRepository, paymentURL string) *OrderService {
+	return &OrderService{
+		repo:              repo,
+		paymentServiceURL: paymentURL,
+		httpClient:        &http.Client{},
+	}
 }
 
 type OrderItemReq struct {
-	ProductID string  `json:"product_id"`
-	Quantity  int     `json:"quantity"`
-	Price     float64 `json:"price"`
+	ProductID   string  `json:"product_id"`
+	Quantity    int     `json:"quantity"`
+	Price       float64 `json:"price"`
+	ProductName string  `json:"product_name"`
+	Category    string  `json:"category"`
 }
 
 func (s *OrderService) CreateOrder(userID string, items []OrderItemReq) (*models.Order, error) {
@@ -32,7 +47,7 @@ func (s *OrderService) CreateOrder(userID string, items []OrderItemReq) (*models
 		total += float64(i.Quantity) * i.Price
 	}
 
-	order := models.Order{
+	order := &models.Order{
 		UserID:     userID,
 		Status:     "pending",
 		TotalPrice: total,
@@ -40,31 +55,39 @@ func (s *OrderService) CreateOrder(userID string, items []OrderItemReq) (*models
 
 	for _, i := range items {
 		order.Items = append(order.Items, models.OrderItem{
-			ProductID: i.ProductID,
-			Quantity:  i.Quantity,
-			Price:     i.Price,
+			ProductID:   i.ProductID,
+			Quantity:    i.Quantity,
+			Price:       i.Price,
+			ProductName: i.ProductName,
+			Category:    i.Category,
 		})
 	}
 
-	if err := s.Repo.Create(&order); err != nil {
+	// creating the order
+	if err := s.repo.Create(order); err != nil {
 		return nil, err
 	}
-	return &order, nil
+
+	// creating the payment
+	// if err := s.createPayment(order); err != nil {
+	// 	return nil, err
+	// }
+	return order, nil
 }
 
 func (s *OrderService) GetOrderByID(id string) (*models.Order, error) {
-	return s.Repo.GetByID(id)
+	return s.repo.GetByID(id)
 }
 
 func (s *OrderService) UpdateStatus(orderID, status string) (*models.Order, error) {
-	order, err := s.Repo.GetByID(orderID)
+	order, err := s.repo.GetByID(orderID)
 	if err != nil {
 		return nil, fmt.Errorf("order not found: %v", err)
 	}
 
 	order.Status = status
 
-	if err := s.Repo.Save(order); err != nil {
+	if err := s.repo.Save(order); err != nil {
 		return nil, fmt.Errorf("failed to update order status: %v", err)
 	} else {
 		log.Println("Order status updated.")
@@ -73,7 +96,7 @@ func (s *OrderService) UpdateStatus(orderID, status string) (*models.Order, erro
 	return order, nil
 }
 func (s *OrderService) UpdateInventory(orderID string) error {
-	order, err := s.Repo.GetByID(orderID)
+	order, err := s.repo.GetByID(orderID)
 	if err != nil {
 		return err
 	}
@@ -124,6 +147,48 @@ func (s *OrderService) UpdateInventory(orderID string) error {
 		}
 
 		resp.Body.Close()
+	}
+
+	return nil
+}
+
+func (s *OrderService) createPayment(order *models.Order) error {
+
+	payload := PaymentRequest{
+		OrderID: order.ID,
+		UserID:  order.UserID,
+		Amount:  order.TotalPrice,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	log.Println(
+		"Calling Payment Service:",
+		s.paymentServiceURL+"/api/v1/payments",
+	)
+
+	resp, err := s.httpClient.Post(
+		s.paymentServiceURL+"/api/v1/payments",
+		"application/json",
+		bytes.NewBuffer(body),
+	)
+
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		respBody, _ := io.ReadAll(resp.Body)
+
+		return fmt.Errorf(
+			"payment service failed: %s",
+			string(respBody),
+		)
 	}
 
 	return nil

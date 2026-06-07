@@ -6,6 +6,7 @@ import (
 	"order-service/internal/models"
 	"order-service/internal/repository"
 	"order-service/internal/service"
+	"order-service/pkg/config"
 	"order-service/pkg/db"
 	"order-service/pkg/logger"
 
@@ -36,8 +37,12 @@ func main() {
 		log.Fatalf("Migration failed: %v", err)
 	}
 
+	paymentURL := config.GetEnv(
+		"PAYMENT_SERVICE_URL",
+		"http://localhost:8085",
+	)
 	repo := repository.NewOrderRepository(gormDB)
-	svc := service.NewOrderService(repo)
+	svc := service.NewOrderService(repo, paymentURL)
 	h := handler.NewOrderHandler(svc)
 
 	r := gin.Default()
