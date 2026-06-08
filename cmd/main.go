@@ -56,7 +56,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8083"
+		port = "8084"
 	}
 	log.Printf("✅ OrderService running on port %s", port)
 	r.Run(":" + port)

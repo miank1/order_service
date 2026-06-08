@@ -68,10 +68,11 @@ func (s *OrderService) CreateOrder(userID string, items []OrderItemReq) (*models
 		return nil, err
 	}
 
-	// creating the payment
-	// if err := s.createPayment(order); err != nil {
-	// 	return nil, err
-	// }
+	fmt.Println("order details ", order)
+	//creating the payment
+	if err := s.createPayment(order); err != nil {
+		return nil, err
+	}
 	return order, nil
 }
 
@@ -167,11 +168,11 @@ func (s *OrderService) createPayment(order *models.Order) error {
 
 	log.Println(
 		"Calling Payment Service:",
-		s.paymentServiceURL+"/api/v1/payments",
+		s.paymentServiceURL+"/api/v1/internal/payments",
 	)
 
 	resp, err := s.httpClient.Post(
-		s.paymentServiceURL+"/api/v1/payments",
+		s.paymentServiceURL+"/api/v1/internal/payments",
 		"application/json",
 		bytes.NewBuffer(body),
 	)
