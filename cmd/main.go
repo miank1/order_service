@@ -2,18 +2,19 @@ package main
 
 import (
 	"log"
-	"order-service/internal/handler"
-	"order-service/internal/models"
-	"order-service/internal/repository"
-	"order-service/internal/service"
-	"order-service/pkg/config"
-	"order-service/pkg/db"
-	"order-service/pkg/logger"
+	"order_service/internal/handler"
+	"order_service/internal/models"
+	"order_service/internal/repository"
+	"order_service/internal/service"
 
 	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/miank1/ecommerce_backend/pkg/config"
+	"github.com/miank1/ecommerce_backend/pkg/db"
+	"github.com/miank1/ecommerce_backend/pkg/logger"
+	"github.com/miank1/ecommerce_backend/pkg/rabbitmq"
 )
 
 func main() {
@@ -44,6 +45,29 @@ func main() {
 	repo := repository.NewOrderRepository(gormDB)
 	svc := service.NewOrderService(repo, paymentURL)
 	h := handler.NewOrderHandler(svc)
+
+	// RabbitMQ
+	rabbit, err := rabbitmq.New(
+		config.GetEnv("RABBITMQ_URL", ""),
+	)
+	if err != nil {
+		log.Fatalf("❌ Failed to connect RabbitMQ: %v", err)
+	}
+	defer rabbit.Close()
+
+	// Ensure queue exists
+	_, err = rabbit.DeclareQueue("checkout_requested")
+	if err != nil {
+		log.Fatalf("❌ Failed to declare queue: %v", err)
+	}
+
+	// Start consumer
+	err = rabbit.Consume("checkout_requested")
+	if err != nil {
+		log.Fatalf("❌ Failed to start consumer: %v", err)
+	}
+
+	log.Println("✅ RabbitMQ Consumer Started")
 
 	r := gin.Default()
 

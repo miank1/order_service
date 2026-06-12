@@ -3,7 +3,7 @@ package handler
 import (
 	"log"
 	"net/http"
-	"order-service/internal/service"
+	"order_service/internal/service"
 
 	"github.com/gin-gonic/gin"
 )

@@ -3,8 +3,8 @@ package service
 import (
 	"bytes"
 	"io"
-	"order-service/internal/models"
-	"order-service/internal/repository"
+	"order_service/internal/models"
+	"order_service/internal/repository"
 
 	"encoding/json"
 	"fmt"
