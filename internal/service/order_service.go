@@ -42,7 +42,9 @@ type OrderItemReq struct {
 }
 
 func (s *OrderService) CreateOrder(userID string, items []OrderItemReq) (*models.Order, error) {
+
 	var total float64
+
 	for _, i := range items {
 		total += float64(i.Quantity) * i.Price
 	}
@@ -63,19 +65,18 @@ func (s *OrderService) CreateOrder(userID string, items []OrderItemReq) (*models
 		})
 	}
 
-	// creating the order
 	if err := s.repo.Create(order); err != nil {
 		return nil, err
 	}
 
-	fmt.Println("order details ", order)
-	//creating the payment
+	fmt.Println("order details", order)
+
 	if err := s.createPayment(order); err != nil {
 		return nil, err
 	}
+
 	return order, nil
 }
-
 func (s *OrderService) GetOrderByID(id string) (*models.Order, error) {
 	return s.repo.GetByID(id)
 }

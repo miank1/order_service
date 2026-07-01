@@ -5,7 +5,7 @@ go 1.25.3
 require (
 	github.com/gin-gonic/gin v1.12.0
 	github.com/joho/godotenv v1.5.1
-	github.com/miank1/ecommerce_backend v0.0.0-20260612150923-b2c92e4bbc7a
+	github.com/miank1/ecommerce_backend v0.0.0-20260615080603-1d93e3408a93
 	gorm.io/gorm v1.31.1
 )
 

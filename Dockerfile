@@ -1,26 +1,41 @@
-# Stage 1: build
-FROM golang:1.24.6 AS builder
+# -----------------------------
+# Builder Stage
+# -----------------------------
+FROM golang:1.25.3-alpine AS builder
 
 WORKDIR /app
+
+# Install certificates for downloading modules
+RUN apk add --no-cache git ca-certificates
+
+# Copy dependency files first (leverages Docker cache)
 COPY go.mod go.sum ./
+
+# Download Go modules
 RUN go mod download
 
-# Copy all source
+# Copy the application source
 COPY . .
 
-# Build the binary for orderservice
-WORKDIR /app/services/orderservice
-RUN CGO_ENABLED=0 GOOS=linux go build -o /orderservice ./cmd/main.go
+# Build a static Linux binary
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build \
+    -ldflags="-s -w" \
+    -o app \
+    ./cmd/main.go
 
-# Stage 2: runtime
-FROM alpine:3.18
-RUN apk add --no-cache ca-certificates
 
-# Copy binary from builder
-COPY --from=builder /orderservice /usr/local/bin/orderservice
+# -----------------------------
+# Runtime Stage
+# -----------------------------
+FROM alpine:3.20
 
-# Expose service port
-EXPOSE 8083
+RUN apk add --no-cache ca-certificates tzdata
 
-# Run service
-CMD ["/usr/local/bin/orderservice"]
+WORKDIR /app
+
+COPY --from=builder /app/app .
+
+EXPOSE 8084
+
+ENTRYPOINT ["./app"]
