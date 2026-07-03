@@ -62,7 +62,7 @@ func main() {
 	// Ensure queue exists
 	_, err = rabbit.DeclareQueue("checkout_requested")
 	if err != nil {
-		log.Fatalf("❌ Failed to declare queue: %v", err)
+		log.Fatalf("RabbitMQ Failed to declare queue: %v", err)
 	}
 
 	// Start consumer
