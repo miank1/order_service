@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"order_service/internal/handler"
 	"order_service/internal/models"
 	"order_service/internal/repository"
@@ -71,9 +72,16 @@ func main() {
 		log.Fatalf("❌ Failed to start consumer: %v", err)
 	}
 
-	log.Println("✅ RabbitMQ Consumer Started")
+	log.Println("RabbitMQ Consumer Started")
 
 	r := gin.Default()
+
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "UP",
+			"service": "order-service",
+		})
+	})
 
 	api := r.Group("orders")
 	{
