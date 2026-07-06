@@ -167,20 +167,16 @@ func (s *OrderService) createPayment(order *models.Order) error {
 		return err
 	}
 
-	log.Println(
-		"Calling Payment Service:",
-		s.paymentServiceURL+"/api/v1/internal/payments",
-	)
+	log.Println("Payment URL ", s.paymentServiceURL)
 
-	resp, err := s.httpClient.Post(
-		s.paymentServiceURL+"/api/v1/internal/payments",
-		"application/json",
-		bytes.NewBuffer(body),
-	)
+	resp, err := s.httpClient.Post(s.paymentServiceURL+"/payments", "application/json", bytes.NewBuffer(body))
 
 	if err != nil {
+		log.Println("HTTP Error:", err)
 		return err
 	}
+
+	log.Println("Status:", resp.Status)
 
 	defer resp.Body.Close()
 
