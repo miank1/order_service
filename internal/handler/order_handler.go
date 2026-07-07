@@ -46,6 +46,8 @@ func (h *OrderHandler) Create(c *gin.Context) {
 // GET
 func (h *OrderHandler) GetOrder(c *gin.Context) {
 	orderID := c.Param("id")
+	log.Println("Order ID:", orderID)
+
 	if orderID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "order id required"})
 		return
