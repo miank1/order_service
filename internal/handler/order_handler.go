@@ -21,7 +21,7 @@ type CreateOrderRequest struct {
 	Items  []service.OrderItemReq `json:"items"`
 }
 
-// POST /api/v1/orders
+// POST
 func (h *OrderHandler) Create(c *gin.Context) {
 	var req CreateOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -43,7 +43,7 @@ func (h *OrderHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"order": order})
 }
 
-// GET /api/v1/orders/:id
+// GET
 func (h *OrderHandler) GetOrder(c *gin.Context) {
 	orderID := c.Param("id")
 	if orderID == "" {
@@ -60,7 +60,7 @@ func (h *OrderHandler) GetOrder(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"order": order})
 }
 
-// PATCH /api/v1/orders/:id/status
+// PATCH
 func (h *OrderHandler) UpdateStatus(c *gin.Context) {
 	orderID := c.Param("id")
 
@@ -78,8 +78,6 @@ func (h *OrderHandler) UpdateStatus(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	log.Println("✅ Order status updated: ****************", orderID, "to", req.Status)
 
 	// ✅ Trigger inventory update when payment succeeded
 	if req.Status == "paid" {
