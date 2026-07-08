@@ -43,10 +43,8 @@ func main() {
 		log.Fatalf("Migration failed: %v", err)
 	}
 
-	paymentURL := config.GetEnv(
-		"PAYMENT_SERVICE_URL",
-		"http://localhost:8085",
-	)
+	paymentURL := config.GetEnv("PAYMENT_SERVICE_URL", "http://localhost:8085")
+
 	repo := repository.NewOrderRepository(gormDB)
 	svc := service.NewOrderService(repo, paymentURL)
 	h := handler.NewOrderHandler(svc)
@@ -83,6 +81,7 @@ func main() {
 		})
 	})
 
+	// handlers
 	api := r.Group("orders")
 	{
 		api.POST("", h.Create)
